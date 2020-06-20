@@ -5,6 +5,8 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
@@ -40,7 +42,7 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -48,20 +50,58 @@ public class FoodController {
     @FXML
     void doCammino(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	String s= this.boxPorzioni.getValue();
+    	String input= this.txtPassi.getText();
+    	if(!input.matches("[0-9]+")) {
+    		txtResult.appendText("Devi inserire un valore numerico intero");
+    		return;
+    	}
+    	if(s==null) {
+    		txtResult.appendText("Devi prima creare un grafo!");
+    		return;
+    	}
+    	int n= Integer.parseInt(input);
+    	List<String> cammino= this.model.camminoMinimo(n, s);
+    	if(model.pesoMax()==-1) {
+    		txtResult.appendText("Non ho trovato un cammino di lunghezza N"+"\n");
+    		return;
+    	}
+    	txtResult.appendText("cammino di peso massimo con "+cammino.size()+" vertici percorsi e peso "+this.model.pesoMax()+"\n");
+    	for(String a: cammino) {
+    		txtResult.appendText(a+"\n");
+    	}
+    	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
+    	String s= this.boxPorzioni.getValue();
+    	if(s==null) {
+    		txtResult.appendText("Devi prima creare un grafo!");
+    		return;
+    	}
+    	Map<String, Double> connessi= this.model.connessi(s);
+    	for(String a: connessi.keySet()) {
+    		txtResult.appendText("Porzione: "+ a+ " peso "+connessi.get(a)+"\n");
+    	}
+    	
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
+    	this.boxPorzioni.getItems().remove(0, this.boxPorzioni.getItems().size()-1);
+    	String input= this.txtCalorie.getText();
+    	if(!input.matches("^[1-9]\\d*(\\.\\d+)?$")) {
+    		txtResult.appendText("Devi inserire un valore numerico");
+    		return;
+    	}
+    	int c= Integer.parseInt(input);
+    	this.model.creaGrafo(c);
+    	txtResult.appendText("Grafo creato con #vertici: "+model.vertici()+" #archi: "+model.archi());
+    	this.boxPorzioni.getItems().addAll(this.model.listVertici(c));
     	
     }
 
